@@ -4,27 +4,30 @@ import { View, ActivityIndicator, StyleSheet } from "react-native";
 import Theme from "../constants/Theme";
 import * as authActions from "../store/actions/auth";
 import { useDispatch } from "react-redux";
+import Api from "../constants/Api";
+import axios from "axios";
 const StartupScreen = ({ props, navigation }) => {
   const dispatch = useDispatch();
 
   //Check if the user logged in or not using Async Stroage
   useEffect(() => {
     const tryLogin = async () => {
-      const userData = await AsyncStorage.getItem("userData");
+      const userData = await AsyncStorage.getItem("userToken");
       if (!userData) {
         navigation.navigate("Welcome");
         return;
       }
       const transformedData = JSON.parse(userData);
-      const { token, userId, fullname } = transformedData;
+      const { token } = transformedData;
+      axios.get(Api.api + "/user/" + token, {
+      }).then(response => {
+        console.log("Response: ", response.data)
+        const responseData = response.data;
+        console.log(responseData)
+        navigation.navigate("Tasks");
+        dispatch(authActions.authenticate(responseData.id, responseData.fullname));
+      })
 
-      if (!fullname || !token || !userId) {
-        navigation.navigate("Welcome");
-        return;
-      }
-
-      navigation.navigate("Tasks");
-      dispatch(authActions.authenticate(userId, token, fullname));
     };
 
     tryLogin();

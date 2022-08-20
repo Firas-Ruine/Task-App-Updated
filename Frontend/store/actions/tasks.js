@@ -2,19 +2,22 @@ import Task from "../../models/Task";
 export const FETCH_TASKS = "FETCH_TASK";
 export const CREATE_TASK = "CREATE_TASK";
 export const DELETE_TASK = "DELETE_TASK";
-import Api from '../../constants/Api'
 import axios from 'axios';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from '../../config/config'
 //Fetching the tasks from database
 export const fetchTasks = () => {
-  return async (dispatch, getState) => {
-    const token = getState().auth.token;
-    axios({
-      method:'get',
-      url: Api.api + "/tasks",
+  return async (dispatch) => {
+
+    //const token = getState().auth.token;
+
+    //console.log(token)
+    const userData = await AsyncStorage.getItem("userToken");
+    const transformedData = JSON.parse(userData);
+    console.log(userData)
+    const { token } = transformedData;
+    await axios.get(config.API_URL + "/tasks", {
       headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
         //Adding token to json
         Authorization: "Bearer " + token,
       },
@@ -22,18 +25,18 @@ export const fetchTasks = () => {
       console.log("Response: ", response.data)
       //Dispatch the response Data
       const responseData = response.data;
+      console.log(responseData)
       const fetchedTasks = [];
       for (const key in responseData) {
         fetchedTasks.push(
           new Task(
             responseData[key].id,
             responseData[key].title,
-            responseData[key].user_id
+            responseData[key].user_id,
           ),
-          console.log(fetchedTasks)
         );
       }
-     
+      console.log(fetchedTasks)
       dispatch({
         type: FETCH_TASKS,
         tasks: fetchedTasks,
@@ -47,13 +50,14 @@ export const fetchTasks = () => {
 
 //Create a new task
 export const createTask = (title) => {
-  return async (dispatch, getState) => {
-    //Get the user Token
-    const token = getState().auth.token;
-    console.log(getState())
-    axios({
+  return async (dispatch) => {
+    const userData = await AsyncStorage.getItem("userToken");
+    const transformedData = JSON.parse(userData);
+    console.log(userData)
+    const { token } = transformedData;
+    await axios({
       method: "post",
-      url: Api.api + "/tasks",
+      url:config.API_URL + "/tasks",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -84,12 +88,14 @@ export const createTask = (title) => {
 
 //Delete Task Function
 export const deleteTask = (id) => {
-  return async (dispatch, getState) => {
-    //Get the user token
-    const token = getState().auth.token;
+  return async (dispatch) => {
+    const userData = await AsyncStorage.getItem("userToken");
+    const transformedData = JSON.parse(userData);
+    console.log(userData)
+    const { token } = transformedData;
     axios({
       method: 'delete',
-      url: `${Api.api}/delete/${id}`,
+      url: `${config.API_URL}/delete/${id}`,
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -108,6 +114,6 @@ export const deleteTask = (id) => {
       console.log('Error: ', error)
     });
 
-    
+
   };
 };

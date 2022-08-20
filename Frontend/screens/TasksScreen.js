@@ -25,19 +25,18 @@ import * as authActions from "../store/actions/auth";
 import * as taskActions from "../store/actions/tasks";
 import { Formik, Field } from 'formik'
 import * as yup from 'yup'
+import Toast from 'react-native-toast-message'
 
 const TasksScreen = ({ navigation }) => {
-  const fullname = useSelector((state) => state.auth.fullname);
   const [error, setError] = useState();
   const [isLoading, setIsLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [taskSelected, setTaskSelected] = useState();
-  const [submitted, setSubmitted] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const userid = useSelector((state) => state.auth.userId);
-  const tasks = useSelector(state =>
-    state.tasks.fetchedTasks.filter(task => task.ownerId === userid)
-  );
+  const fullname = useSelector((state) => state.auth.fullname);
+  const userId = useSelector((state) => state.auth.userId);
+  const tasks = useSelector(state => state.tasks.fetchedTasks);
+  console.log(tasks)
 
   //Dispatch the error
   const dispatch = useDispatch();
@@ -66,29 +65,40 @@ const TasksScreen = ({ navigation }) => {
   }, [dispatch, fetchTasks]);
 
   //Add Task Function
-  const addTask = async (values) => {
-    //Keyboard.dismiss();
-    setSubmitted(true);
-    if (!values.title) {
-      Alert.alert("Form Invald!", "Task field can't be empty");
-      return;
-    }
-    const action = taskActions.createTask(values.title);
+  const addTask = async (values, { resetForm }) => {
+    action = taskActions.createTask(values.title);
     console.log(values.title);
     setError(null);
     setIsLoading(true);
     try {
-      dispatch(action);
+      await dispatch(action);
+      Toast.show({
+        type: 'success',
+        text1: 'Task Added Successfully!',
+        visibilityTime: 4000,
+        autoHide: true
+      })
+      resetForm({ values: '' });
       setIsLoading(false);
     } catch (err) {
-      setError(err.message);
+      setError(err);
       setIsLoading(false);
     }
   };
 
   //Delete task function
   const deleteTask = async (id) => {
-    await dispatch(taskActions.deleteTask(id));
+    try {
+      await dispatch(taskActions.deleteTask(id));
+      Toast.show({
+        type: 'success',
+        text1: 'Your task is done!',
+        visibilityTime: 4000,
+        autoHide: true
+      })
+    } catch (err) {
+      console.log(err)
+    }
   };
 
   const taskValidationSchema = yup.object().shape({
@@ -104,111 +114,111 @@ const TasksScreen = ({ navigation }) => {
       }}
       validationSchema={taskValidationSchema}
       onSubmit={(values, { resetForm }) => {
-        addTask(values);
-        resetForm({ values: '' });
+        addTask(values, { resetForm });
       }}
-
     >
       {({ handleSubmit, isValid }) => (
-       
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={10}
-            enabled={false}
-            style={{ flex: 1 }}
-          >
-            <View style={styles.container}>
-              <Shape source={require("../assets/shapeTask.png")} />
-              <View style={styles.userContainer}>
-                <Image
-                  resizeMode="contain"
-                  style={styles.userImage}
-                  source={require("../assets/Firas.jpg")}
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={10}
+          enabled={false}
+          style={{ flex: 1 }}
+        >
+          <View style={styles.container}>
+            <Shape source={require("../assets/shapeTask.png")} />
+            <Toast />
+            <View style={styles.userContainer}>
+              <Image
+                resizeMode="contain"
+                style={styles.userImage}
+                source={require("../assets/Firas.jpg")}
+              />
+              <View style={styles.nameTextContainer}>
+                <CustomBigText
+                  text={"Welcome, " + fullname}
+                  style={styles.nameText}
                 />
-                <View style={styles.nameTextContainer}>
-                  <CustomBigText
-                    text={"Welcome, " + fullname}
-                    style={styles.nameText}
-                  />
-                </View>
               </View>
+            </View>
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={styles.formContainer}>
+              <Field
+                component={CustomInput}
+                name="title"
+                placeholder="Add a new task"
+              />
+            </View>
+            <View style={styles.buttonContainer}>
+              <CustomButton text="ADD" style={styles.button} onPress={handleSubmit} disabled={!isValid} />
             </View>
             <View style={{ flex: 1 }}>
-              <View style={styles.formContainer}>
-                <Field
-                  component={CustomInput}
-                  name="title"
-                  placeholder="Add a new task"
+              <CustomBigText text="Tasks List" style={styles.taskText} />
+            </View>
+            <View style={styles.cardContainer}>
+              <View style={styles.Card}>
+                <CustomSmallText text="Tasks List" style={styles.cardText} />
+                <FlatList
+                  onRefresh={fetchTasks}
+                  refreshing={isRefreshing}
+                  style={styles.flatList}
+                  data={tasks}
+                  renderItem={(itemData) => (
+                    <Task
+                      key={itemData.item.id}
+                      title={itemData.item.title}
+                      onValueChange={() => {
+                        setTaskSelected(itemData.item.id);
+                        setModalVisible(true);
+                      }}
+                    />
+                  )}
                 />
               </View>
-              <View style={styles.buttonContainer}>
-                <CustomButton text="ADD" style={styles.button} onPress={handleSubmit} disabled={!isValid} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <CustomBigText text="Tasks List" style={styles.taskText} />
-              </View>
-              <View style={styles.cardContainer}>
-                <View style={styles.Card}>
-                  <CustomSmallText text="Tasks List" style={styles.cardText} />
-
-                  <FlatList
-                    style={styles.flatList}
-                    data={tasks}
-                    renderItem={(itemData) => (
-                      <Task
-                        key={itemData.item.id}
-                        title={itemData.item.title}
-                        onValueChange={() => {
-                          setTaskSelected(itemData.item.id);
-                          setModalVisible(true);
-                        }}
-                      />
-                    )}
-                  />
-                </View>
-                <Text
-                  style={styles.logout}
-                  onPress={() => {
-                    dispatch(authActions.logout());
-                    navigation.navigate("Login");
-                  }}
+              <Text
+                style={styles.logout}
+                onPress={() => {
+                  dispatch(authActions.logout());
+                  navigation.navigate("Login");
+                }}
+              >
+                LOGOUT
+              </Text>
+              <View style={styles.centeredView}>
+                <Modal
+                  animationType="none"
+                  transparent={true}
+                  visible={modalVisible}
                 >
-                  LOGOUT
-                </Text>
-                <View style={styles.centeredView}>
-                  <Modal
-                    animationType="none"
-                    transparent={true}
-                    visible={modalVisible}
-                  >
-                    <View style={styles.centeredView}>
-                      <View style={styles.modalView}>
-                        <Text style={styles.modalText}>This task is Done ?</Text>
-                        <View style={styles.modalButtonContainer}>
-                          <Pressable
-                            style={styles.buttonNotyet}
-                            onPress={() => setModalVisible(!modalVisible)}
-                          >
-                            <Text style={styles.textStyle}>Not yet</Text>
-                          </Pressable>
-                          <Pressable
-                            style={styles.buttonYes}
-                            onPress={() => {
-                              deleteTask(taskSelected);
-                              fetchTasks();
-                              setModalVisible(!modalVisible);
-                            }}
-                          >
-                            <Text style={styles.textStyle}>Yes</Text>
-                          </Pressable>
-                        </View>
+                  <View style={styles.centeredView}>
+                    <View style={styles.modalView}>
+                      <Text style={styles.modalText}>This task is Done ?</Text>
+                      <View style={styles.modalButtonContainer}>
+                        <Pressable
+                          style={styles.buttonNotyet}
+                          onPress={() => setModalVisible(!modalVisible)}
+                        >
+                          <Text style={styles.textStyle}>Not yet</Text>
+                        </Pressable>
+                        <Pressable
+                          style={styles.buttonYes}
+                          onPress={() => {
+                            deleteTask(taskSelected);
+                            fetchTasks();
+                            setModalVisible(!modalVisible);
+                          }}
+                        >
+                          <Text style={styles.textStyle}>Yes</Text>
+                        </Pressable>
                       </View>
                     </View>
-                  </Modal>
-                </View>
+                  </View>
+                </Modal>
               </View>
             </View>
-          </KeyboardAvoidingView>
+          </View>
+        </KeyboardAvoidingView>
       )}
     </Formik>
   );

@@ -20,28 +20,44 @@ import CustomButton from "../components/CustomButton";
 import Theme from "../constants/Theme";
 import { Formik, Field } from 'formik'
 import * as yup from 'yup'
+import Toast from 'react-native-toast-message'
 
 const RegistrationScreen = ({ props, navigation }) => {
+  const [error, setError] = useState();
   const dispatch = useDispatch()
 
   //Create account function
-  const SignUp = async (values) => {
+  const SignUp = async (values, { resetForm }) => {
+    action =authActions.signup(
+      values.fullName,
+      values.email,
+      values.password,
+      values.confirmPassword
+    )
+    setError(null)
     try {
-      await dispatch(authActions.signup(
-        values.fullName,
-        values.email,
-        values.password,
-        values.confirmPassword
-      ));
+      await dispatch(action);
       navigation.navigate("Login");
+      resetForm({ values: '' });
     } catch (err) {
+      setError(err.message)
     }
   };
-
+  //Set the error Taost
+  useEffect(() => {
+    if (error) {
+      Toast.show({
+        type:'error',
+        text1:'Email already Exist!',
+        text2:'This email already exist ',
+        visibilityTime:4000,
+        autoHide:true
+      })
+    }
+  }, [error]);
   const signUpValidationSchema = yup.object().shape({
     fullName: yup
       .string()
-      .matches(/(\w.+\s).+/, 'Enter at least 2 names')
       .required('Full name is required'),
     email: yup
       .string()
@@ -67,8 +83,8 @@ const RegistrationScreen = ({ props, navigation }) => {
       }}
       validationSchema={signUpValidationSchema}
       onSubmit={(values, { resetForm }) => {
-        SignUp(values);
-        resetForm({ values: '' });
+        SignUp(values, { resetForm });
+        
       }}
     >
       {({ handleSubmit, isValid }) => (
@@ -78,6 +94,7 @@ const RegistrationScreen = ({ props, navigation }) => {
           style={{ flex: 1 }}
         >
           <Shape source={require("../assets/shape.png")} />
+          <Toast/>
           <ScrollView>
             <View style={styles.textContainer}>
               <CustomBigText text="Welcome Onboard!" style={styles.bigText} />

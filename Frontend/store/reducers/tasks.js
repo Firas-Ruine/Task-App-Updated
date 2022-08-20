@@ -22,6 +22,7 @@ export default (state = initialState, action) => {
       const newTask = new Task(
         action.taskData.id,
         action.taskData.title,
+        action.taskData.ownerId
       );
       return {
         ...state,

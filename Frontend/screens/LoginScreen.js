@@ -14,6 +14,7 @@ import { useDispatch } from "react-redux";
 import * as authActions from "../store/actions/auth";
 import { useCallback, useEffect, useReducer, useState } from "react";
 import CustomInput from "../components/CustomInput";
+import Toast from 'react-native-toast-message'
 import Shape from "../components/Shape";
 import DeviceDimensions from "../constants/DeviceDimensions";
 import CustomBigText from "../components/CustomBigText";
@@ -21,23 +22,38 @@ import CustomButton from "../components/CustomButton";
 import Theme from "../constants/Theme";
 import { Formik, Field } from 'formik'
 import * as yup from 'yup'
+
 const LoginScreen = ({ props, navigation }) => {
-  
+  const [error, setError] = useState("");
   const dispatch = useDispatch();
 
   //Login function
-  const Login = async (values) => {
-    //  setError(null);
+  const Login = async (values, { resetForm }) => {
+    //Declaring the action
+    action = authActions.login(values.email, values.password);
+    setError(null);
     try {
-      await dispatch(authActions.login(
-        values.email,
-        values.password
-      ));
+      console.log('dkhal dispatch')
+      await dispatch(action);
       navigation.navigate("Tasks");
+      resetForm({ values: '' });
     } catch (err) {
-      //setError(err.message);
+      setError(err.message);
     }
   };
+  //Set the error alert
+  useEffect(() => {
+    if (error) {
+      console.log('dkhal useeffect')
+      Toast.show({
+        type: 'error',
+        text1: 'Wrong email or password!',
+        text2: 'Check your informations',
+        visibilityTime: 4000,
+        autoHide: true
+      })
+    }
+  }, [error]);
 
   const loginValidationSchema = yup.object().shape({
     email: yup
@@ -57,8 +73,7 @@ const LoginScreen = ({ props, navigation }) => {
       }}
       validationSchema={loginValidationSchema}
       onSubmit={(values, { resetForm }) => {
-        Login(values);
-        resetForm({ values: '' });
+        Login(values, { resetForm });
       }}
     >
       {({ handleSubmit, isValid }) => (
@@ -66,7 +81,9 @@ const LoginScreen = ({ props, navigation }) => {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={10}
         >
+
           <Shape source={require("../assets/shape.png")} />
+          <Toast />
           <ScrollView>
             <View style={styles.textContainer}>
               <CustomBigText text="Welcome Back!" />

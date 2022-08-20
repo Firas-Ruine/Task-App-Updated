@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 //Public Routes
 Route::post('/register', [UserController::class, 'register']);
 Route::post('/login', [UserController::class, 'login']);
-
+Route::get('/user/{token}', [UserController::class, 'getUserData']);
 //Routes with authentification
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/tasks', [TaskController::class, 'index']);

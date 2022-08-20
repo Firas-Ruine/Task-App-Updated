@@ -6,7 +6,7 @@ use App\Http\Requests\FormLoginRequest;
 use App\Http\Requests\FormRegisterRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;;
 class UserController extends Controller
@@ -50,6 +50,13 @@ class UserController extends Controller
         ];
 
         return response($response, 201);
+    }
+
+    public function getUserData($token)
+    {
+        $token = PersonalAccessToken::findToken($token);
+        $userData = $token->tokenable;
+        return $userData;
     }
 
     public function logout(Request $request)
