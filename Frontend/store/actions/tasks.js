@@ -8,13 +8,8 @@ import config from '../../config/config'
 //Fetching the tasks from database
 export const fetchTasks = () => {
   return async (dispatch) => {
-
-    //const token = getState().auth.token;
-
-    //console.log(token)
     const userData = await AsyncStorage.getItem("userToken");
     const transformedData = JSON.parse(userData);
-    console.log(userData)
     const { token } = transformedData;
     await axios.get(config.API_URL + "/tasks", {
       headers: {
@@ -22,10 +17,8 @@ export const fetchTasks = () => {
         Authorization: "Bearer " + token,
       },
     }).then(response => {
-      console.log("Response: ", response.data)
       //Dispatch the response Data
       const responseData = response.data;
-      console.log(responseData)
       const fetchedTasks = [];
       for (const key in responseData) {
         fetchedTasks.push(
@@ -36,7 +29,6 @@ export const fetchTasks = () => {
           ),
         );
       }
-      console.log(fetchedTasks)
       dispatch({
         type: FETCH_TASKS,
         tasks: fetchedTasks,
@@ -53,11 +45,10 @@ export const createTask = (title) => {
   return async (dispatch) => {
     const userData = await AsyncStorage.getItem("userToken");
     const transformedData = JSON.parse(userData);
-    console.log(userData)
     const { token } = transformedData;
     await axios({
       method: "post",
-      url:config.API_URL + "/tasks",
+      url: config.API_URL + "/tasks",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -68,7 +59,6 @@ export const createTask = (title) => {
         title: title,
       }
     }).then(response => {
-      console.log("Response: ", response.data)
       //Dispatch the response Data
       const responseData = response.data;
       dispatch({
@@ -91,9 +81,8 @@ export const deleteTask = (id) => {
   return async (dispatch) => {
     const userData = await AsyncStorage.getItem("userToken");
     const transformedData = JSON.parse(userData);
-    console.log(userData)
     const { token } = transformedData;
-    axios({
+    await axios({
       method: 'delete',
       url: `${config.API_URL}/delete/${id}`,
       headers: {

@@ -43,6 +43,7 @@ const RegistrationScreen = ({ props, navigation }) => {
       setError(err.message)
     }
   };
+  
   //Set the error Taost
   useEffect(() => {
     if (error) {
@@ -55,6 +56,8 @@ const RegistrationScreen = ({ props, navigation }) => {
       })
     }
   }, [error]);
+
+  //Validation with yup
   const signUpValidationSchema = yup.object().shape({
     fullName: yup
       .string()

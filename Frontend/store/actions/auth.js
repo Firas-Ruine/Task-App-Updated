@@ -31,7 +31,6 @@ export const signup = (fullname, email, password, password_confirmation) => {
         password_confirmation,
       }),
     }).then(response => {
-      console.log("Response: ", response.data)
     }).catch(error => {
       let message = "Invalid credentials!";
       if (error.response.data.errors.email) {
@@ -39,7 +38,6 @@ export const signup = (fullname, email, password, password_confirmation) => {
       } else {
         message = error.response.data.message;
       }
-      console.log(message)
       throw new Error(message);
     });;
 
@@ -85,7 +83,6 @@ export const logout = () => {
   return async () => {
     const userData = await AsyncStorage.getItem("userToken");
     const transformedData = JSON.parse(userData);
-    console.log(userData)
     const { token } = transformedData;
     await axios({
       method: 'post',
@@ -97,7 +94,7 @@ export const logout = () => {
         Authorization: "Bearer " + token,
       },
     }).then(response => {
-      console.log(response)
+      console.log(response.data)
       AsyncStorage.removeItem("userToken");
       return { type: LOGOUT };
     }).catch(error => {

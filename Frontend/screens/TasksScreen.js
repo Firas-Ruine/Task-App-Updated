@@ -29,20 +29,22 @@ import Toast from 'react-native-toast-message'
 
 const TasksScreen = ({ navigation }) => {
   const [error, setError] = useState();
-  const [isLoading, setIsLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [taskSelected, setTaskSelected] = useState();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const fullname = useSelector((state) => state.auth.fullname);
-  const userId = useSelector((state) => state.auth.userId);
   const tasks = useSelector(state => state.tasks.fetchedTasks);
-  console.log(tasks)
 
   //Dispatch the error
   const dispatch = useDispatch();
   useEffect(() => {
     if (error) {
-      Alert.alert("An error occurred!", error, [{ text: "Ok" }]);
+      Toast.show({
+        type: 'error',
+        text1: 'An error occured!',
+        visibilityTime: 4000,
+        autoHide: true
+      })
     }
   }, [error]);
 
@@ -60,16 +62,13 @@ const TasksScreen = ({ navigation }) => {
 
   // init
   useEffect(() => {
-    setIsLoading(true);
-    fetchTasks().then(() => setIsLoading(false));
+    fetchTasks();
   }, [dispatch, fetchTasks]);
 
   //Add Task Function
   const addTask = async (values, { resetForm }) => {
     action = taskActions.createTask(values.title);
-    console.log(values.title);
     setError(null);
-    setIsLoading(true);
     try {
       await dispatch(action);
       Toast.show({
@@ -79,17 +78,16 @@ const TasksScreen = ({ navigation }) => {
         autoHide: true
       })
       resetForm({ values: '' });
-      setIsLoading(false);
     } catch (err) {
       setError(err);
-      setIsLoading(false);
     }
   };
 
   //Delete task function
   const deleteTask = async (id) => {
+    action = taskActions.deleteTask(id)
     try {
-      await dispatch(taskActions.deleteTask(id));
+      await dispatch(action);
       Toast.show({
         type: 'success',
         text1: 'Your task is done!',
@@ -101,6 +99,7 @@ const TasksScreen = ({ navigation }) => {
     }
   };
 
+  //Validation with yup
   const taskValidationSchema = yup.object().shape({
     title: yup
       .string()

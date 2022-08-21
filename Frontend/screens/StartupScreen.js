@@ -19,7 +19,9 @@ const StartupScreen = ({ props, navigation }) => {
       }
       const transformedData = JSON.parse(userData);
       const { token } = transformedData;
-      axios.get(Api.api + "/user/" + token, {
+      
+      //Api to get user data from his token
+     await axios.get(Api.api + "/user/" + token, {
       }).then(response => {
         console.log("Response: ", response.data)
         const responseData = response.data;

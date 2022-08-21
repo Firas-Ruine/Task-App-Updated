@@ -33,7 +33,6 @@ const LoginScreen = ({ props, navigation }) => {
     action = authActions.login(values.email, values.password);
     setError(null);
     try {
-      console.log('dkhal dispatch')
       await dispatch(action);
       navigation.navigate("Tasks");
       resetForm({ values: '' });
@@ -41,10 +40,10 @@ const LoginScreen = ({ props, navigation }) => {
       setError(err.message);
     }
   };
-  //Set the error alert
+
+  //Set the error Toast
   useEffect(() => {
     if (error) {
-      console.log('dkhal useeffect')
       Toast.show({
         type: 'error',
         text1: 'Wrong email or password!',
@@ -55,6 +54,7 @@ const LoginScreen = ({ props, navigation }) => {
     }
   }, [error]);
 
+  //Validation with yup
   const loginValidationSchema = yup.object().shape({
     email: yup
       .string()
